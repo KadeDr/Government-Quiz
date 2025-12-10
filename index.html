@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Political Science Quiz</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .quiz-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .progress {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .score-display {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+        .correct-count {
+            color: #28a745;
+        }
+        .incorrect-count {
+            color: #dc3545;
+        }
+        .question {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        .question h3 {
+            color: #444;
+            margin-bottom: 15px;
+        }
+        .option {
+            margin: 10px 0;
+            padding: 15px;
+            background-color: white;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .option:hover:not(.correct):not(.incorrect) {
+            background-color: #e8f4f8;
+            border-color: #4CAF50;
+        }
+        .option.selected {
+            background-color: #d4edda;
+            border-color: #28a745;
+        }
+        .option.correct {
+            background-color: #d4edda;
+            border-color: #28a745;
+            font-weight: bold;
+        }
+        .option.incorrect {
+            background-color: #f8d7da;
+            border-color: #dc3545;
+        }
+        .option.disabled {
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .feedback {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            display: none;
+        }
+        .feedback.correct {
+            background-color: #d4edda;
+            color: #155724;
+            display: block;
+        }
+        .feedback.incorrect {
+            background-color: #f8d7da;
+            color: #721c24;
+            display: block;
+        }
+        .button-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        button {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .submit-btn {
+            background-color: #007bff;
+            color: white;
+            display: none;
+        }
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+        .submit-btn.show {
+            display: inline-block;
+        }
+        .next-btn {
+            background-color: #28a745;
+            color: white;
+            display: none;
+        }
+        .next-btn:hover {
+            background-color: #218838;
+        }
+        .next-btn.show {
+            display: inline-block;
+        }
+        .results {
+            display: none;
+            text-align: center;
+            padding: 30px;
+        }
+        .results.show {
+            display: block;
+        }
+        .results h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .final-score {
+            font-size: 48px;
+            color: #28a745;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .restart-btn {
+            background-color: #007bff;
+            color: white;
+            margin-top: 20px;
+        }
+        .restart-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="quiz-container">
+        <h1>Government Final Exam Study Quiz</h1>
+        <div class="progress" id="progress">Question 1 of 50</div>
+        <div class="score-display" id="scoreDisplay">
+            <span class="correct-count">Correct: <span id="correctCount">0</span></span> | 
+            <span class="incorrect-count">Incorrect: <span id="incorrectCount">0</span></span>
+        </div>
+        <div id="quizContent">
+            <div class="question" id="questionContainer"></div>
+            <div class="feedback" id="feedback"></div>
+            <div class="button-container">
+                <button class="submit-btn" id="submitBtn" onclick="submitAnswer()">Submit Answer</button>
+                <button class="next-btn" id="nextBtn" onclick="nextQuestion()">Next Question</button>
+            </div>
+        </div>
+        <div class="results" id="results">
+            <h2>Quiz Complete!</h2>
+            <div class="final-score" id="finalScore"></div>
+            <p id="resultText"></p>
+            <button class="restart-btn" onclick="restartQuiz()">Restart Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        const allQuestions = [
+            {
+                question: "Government is best defined as the",
+                options: ["means by which wealth is redistributed.", "institutions and procedures by which a territory and its people are ruled.", "set of political principles and values that guide political life.", "invisible hand that turns private interests into public goods."],
+                correct: 1
+            },
+            {
+                question: "Members of Congress engaging in discussions and conflicts over the best policies to address an economic recession is an example of",
+                options: ["oligarchy.", "politics.", "equality of results.", "direct democracy."],
+                correct: 1
+            },
+            {
+                question: "Which of the following statements about government is true?",
+                options: ["Government is able to provide public goods, like defense or regulation of air quality, that citizens need but are likely unable to provide for themselves.", "Governments have always sought and received the support of the people whom they serve.", "Government in the United States was created to be limited and therefore has very little influence over the daily lives of Americans today.", "Most of the global population lives in a democratic form of government."],
+                correct: 0
+            },
+            {
+                question: "A government that is not constrained by legal limits and also seeks to eliminate any challenges to its authority is known as a(n) ________ government.",
+                options: ["democratic", "authoritarian", "republican", "totalitarian"],
+                correct: 3
+            },
+            {
+                question: "Which term describes a form of government in which a small group, typically landowners, military officers, or wealthy merchants, controls most of the governing decisions?",
+                options: ["oligarchic", "autocratic", "democratic", "totalitarian"],
+                correct: 0
+            },
+            {
+                question: "An autocracy exists when",
+                options: ["the government is controlled by a single individual.", "citizens play a significant part in government by electing key public officials.", "the constitution of a government is followed strictly.", "the government is controlled by a small but powerful group of people."],
+                correct: 0
+            },
+            {
+                question: "The willingness to be restrained by the power of social institutions, but not by political or legal institutions, is a hallmark of a(n) ________ regime.",
+                options: ["democratic", "authoritarian", "monarchic", "totalitarian"],
+                correct: 1
+            },
+            {
+                question: "A government that is formally limited by laws and rules is called",
+                options: ["oligarchic.", "democratic.", "totalitarian.", "constitutional."],
+                correct: 3
+            },
+            {
+                question: "Which of the following would be an example of a totalitarian government but not an authoritarian one?",
+                options: ["A large labor union allies itself with the monarch to gain more benefits from the state.", "A government abolishes elections and instead the ruling party declares that it will remain in power until it has completed all its objectives and it believes the country is ready to return to democracy.", "While a government does technically permit elections, only its approved candidates can run.", "A ruler places himself as a godlike figure at the center of the state's only permitted religion."],
+                correct: 3
+            },
+            {
+                question: "Which of the following describes a system of rule that permits citizens to play a significant part in the governmental process, usually through the election of key public officials?",
+                options: ["dictatorship", "autocracy", "oligarchy", "democracy"],
+                correct: 3
+            },
+            {
+                question: "Having some share or say in the composition of a government's leadership, how it is organized, or what its policies are going to be is called",
+                options: ["federalism.", "autocracy.", "government.", "political power."],
+                correct: 3
+            },
+            {
+                question: "A representative democracy (also known as a republic) is a system of government that",
+                options: ["allows citizens to make, veto, or judge statutes personally.", "allows citizens to vote directly on laws and policies.", "gives citizens a regular opportunity to elect top government officials.", "gives citizens the ability to debate important constitutional decisions."],
+                correct: 2
+            },
+            {
+                question: "Which of the following comes closest to describing the political system favored by the American Founders?",
+                options: ["A system of direct democracy in which the right to vote on laws would be limited to the middle and upper classes.", "A system of representative democracy in which the ability to vote for elected representatives would be limited to the middle and upper classes.", "A system of direct democracy in which the right to vote on laws would be extended to all citizens.", "A system of representative democracy in which the ability to vote for elected representatives would be extended to all citizens."],
+                correct: 1
+            },
+            {
+                question: "Which of the following describes a principle of democracy in which political authority rests ultimately in the hands of the people?",
+                options: ["pluralism", "direct democracy", "popular sovereignty", "political culture"],
+                correct: 2
+            },
+            {
+                question: "Which of the following is considered a responsibility of citizens of the United States?",
+                options: ["worshipping at a church, synagogue, temple, or mosque", "donating to campaigns", "volunteering for a political party", "serving on a jury when called"],
+                correct: 3
+            },
+            {
+                question: "American civil liberties and rights, such as freedom of speech, worship, and trial by jury are listed primarily in",
+                options: ["the Constitution's Bill of Rights.", "the Pledge of Allegiance.", "the Federalist Papers.", "the Declaration of Independence."],
+                correct: 0
+            },
+            {
+                question: "Generally speaking, to be a good citizen in the United States, it is most critical to have",
+                options: ["connections with interest groups.", "money to donate to political campaigns.", "a party affiliation.", "sufficient political knowledge."],
+                correct: 3
+            },
+            {
+                question: "The Stamp Act was a",
+                options: ["tax on many printed items in the colonies, such as newspapers.", "prohibition on all unofficial mail.", "law permitting the Crown to open mail.", "tax on sugar, molasses, and other commodities."],
+                correct: 0
+            },
+            {
+                question: "Colonial protesters of the Stamp Act and the Sugar Act rallied around which slogan?",
+                options: ["\"Don't tread on me.\"", "\"No taxation without representation.\"", "\"A house divided against itself cannot stand.\"", "\"Give me liberty or give me death.\""],
+                correct: 1
+            },
+            {
+                question: "Which of the following statements best describes British rule of the American colonies during the first half of the eighteenth century?",
+                options: ["The British ruled with a light hand and exerted a strong influence only in the largest colonial cities.", "The British ruled with a light hand and exerted almost no influence at all in any colonial town or city.", "The British ruled with a heavy hand and exerted a strong influence in every colonial town and city.", "The British ruled with a heavy hand in small towns but exerted no influence at all in the largest cities."],
+                correct: 0
+            },
+            {
+                question: "The Boston Tea Party was largely a response to the",
+                options: ["British government's decision to grant the East India Company a monopoly on the export of tea from Britain.", "British government's decision to remove all of its soldiers from the colonies.", "British government's decision to tax printed items in the colonies, such as newspapers and playing cards.", "Boston Massacre."],
+                correct: 0
+            },
+            {
+                question: "Which European Enlightenment political philosopher is most closely associated with the idea that monarchs derive their authority from a contract with the people rather than from divine right?",
+                options: ["Baron de Montesquieu", "Thomas Hobbes", "Thomas Jefferson", "Aristotle"],
+                correct: 1
+            },
+            {
+                question: "What made the Articles of Confederation impractical?",
+                options: ["The Articles of Confederation established a Congress with too many powers.", "They established a Congress without the power to collect taxes.", "They gave Congress the power to negotiate treaties with other countries.", "They gave all states voting rights, which produced conflicts."],
+                correct: 1
+            },
+            {
+                question: "Why was the question of how seats in Congress were to be allocated especially significant to the delegates?",
+                options: ["The decision of how to allocate representation mattered most for the enslaved Black people, who would be able to receive a vote under the plans calling for population-based representation.", "The rules determining states' representation mattered mostly for the size of government; a rule leading to more seats would mean that decisions would be harder to reach.", "Because states' populations, economies, and interests varied considerably, the rules determining states' representation could ultimately affect which states would win and lose in policymaking.", "As a practical matter, the rules determining states' representation had little importance because the states had similar preferences on most issues, including slavery, and size and makeup of states' populations were fairly consistent."],
+                correct: 2
+            },
+            {
+                question: "Assume that you were a delegate from a less populous northern state attending the Constitutional Convention. Which of the following proposals would you be most supportive of?",
+                options: ["the Great Compromise", "the Three-Fifths Compromise", "the Virginia Plan", "the New Jersey Plan"],
+                correct: 3
+            },
+            {
+                question: "The agreement reached at the Constitutional Convention of 1787 that gave each state an equal number of senators regardless of its population but linked representation in the House of Representatives to population is known as the",
+                options: ["Three-Fifths Compromise.", "New Jersey Plan.", "Virginia Plan.", "Great Compromise."],
+                correct: 3
+            },
+            {
+                question: "The three branches of government created by the Constitution are",
+                options: ["military, courts, and bureaucracy.", "constitutional, elected, and appointed.", "federal, state, and local.", "executive, legislative, and judicial."],
+                correct: 3
+            },
+            {
+                question: "The Supreme Court legalized same-sex marriage in Obergefell v. Hodges. Suppose Alabama passed a new state law that bans same-sex marriage within Alabama. This law would be invalid due to",
+                options: ["the supremacy clause of the U.S. Constitution.", "the elastic clause of the U.S. Constitution.", "the separate sovereigns doctrine.", "the states' rights doctrine."],
+                correct: 0
+            },
+            {
+                question: "The framers employed the separation of powers and federalism in order to",
+                options: ["create a replica of the British political system.", "promote economic equality among all citizens.", "end the slave trade.", "prevent the new government from abusing its power."],
+                correct: 3
+            },
+            {
+                question: "The first 10 amendments to the U.S. Constitution are also called",
+                options: ["the Bill of Rights.", "the Great Compromise.", "the Federalist Papers.", "the Confederation."],
+                correct: 0
+            },
+            {
+                question: "The main function of the privileges and immunities clause of Article IV is that it",
+                options: ["prevents states from discriminating against nonresidents.", "prevents states from coining their own money.", "requires all states to provide a uniform standard of benefits and entitlement.", "compels each state to recognize the laws of other states."],
+                correct: 0
+            },
+            {
+                question: "The era of dual federalism was from the ________ until ________.",
+                options: ["New Deal; the 1960s", "Founding; the New Deal", "Civil War; World War II", "Founding; the end of the Civil War"],
+                correct: 3
+            },
+            {
+                question: "Which of the following events was most influential in triggering the rise of a more active national government?",
+                options: ["the Great Recession", "the Great Depression", "the Civil War", "the War of 1812"],
+                correct: 1
+            },
+            {
+                question: "A woman is trying to buy birth control at a pharmacy, but the pharmacist refuses to sell her birth control on religious grounds. Which right is the pharmacist infringing upon?",
+                options: ["right to bear arms", "right to free expression", "right to counsel", "right to privacy"],
+                correct: 3
+            },
+            {
+                question: "What is the Bill of Rights?",
+                options: ["The Bill of Rights is the first 10 amendments to the U.S. Constitution.", "The Bill of Rights includes all of the civil liberties and civil rights found in the U.S. Constitution.", "The Bill of Rights is the first national Constitution of the United States.", "The Bill of Rights is the First Amendment to the U.S. Constitution."],
+                correct: 0
+            },
+            {
+                question: "________ are aspects of personal freedom constitutionally protected from government interference.",
+                options: ["Electoral rights", "Political rights", "Civil liberties", "Civil rights"],
+                correct: 2
+            },
+            {
+                question: "Which of the following is an example of a civil liberty stated in the U.S. Constitution?",
+                options: ["freedom of speech", "equity in public school funding", "voting rights", "the right to privacy"],
+                correct: 0
+            },
+            {
+                question: "During the founding era, ________ were the strongest supporters of adding a bill of rights to the Constitution.",
+                options: ["Antifederalists", "Federalists", "enslaved people", "merchants and landowners"],
+                correct: 0
+            },
+            {
+                question: "The constitutional basis for the nationalization of the Bill of Rights is the ________ Amendment.",
+                options: ["Fourth", "Tenth", "Fourteenth", "First"],
+                correct: 2
+            },
+            {
+                question: "What is the process by which the Supreme Court has expanded specific parts of the Bill of Rights to protect citizens against state actions?",
+                options: ["habeas corpus", "the incorporation clause", "cooperative federalism", "selective incorporation"],
+                correct: 3
+            },
+            {
+                question: "Why was the Bill of Rights adopted?",
+                options: ["Federalists realized that no constitution would last for long without a bill of rights.", "The federal government in the early days of the Republic was violating too many individual rights.", "The Supreme Court ruled that a bill of rights was needed.", "Antifederalists demanded it as the price of ratification of the Constitution."],
+                correct: 3
+            },
+            {
+                question: "The text of the Fourteenth Amendment states",
+                options: ["\"no soldier shall, in time of peace be quartered in any house, without the consent of the owner, nor in time of war, but in a manner to be prescribed by law.\"", "\"nor shall any State deprive any person of life, liberty, or property, without due process of law; nor deny to any person within its jurisdiction the equal protection of the laws.\"", "\"the right of the people to keep and bear Arms, shall not be infringed.\"", "\"no person shall . . . be twice put in jeopardy of life or limb.\""],
+                correct: 1
+            },
+            {
+                question: "Why is selective incorporation significant?",
+                options: ["Selective incorporation greatly restricted the power of Congress through its more restrictive interpretation of the necessary and proper clause of the Constitution.", "Prior to incorporation of the Bill of Rights, these liberties and rights were not extended to state governments, which could make many laws directly impacting the lives of citizens, limiting the Bill of Rights.", "Selective incorporation granted both the state and national governments greater power over individuals.", "Selective incorporation was a means to greatly increase the power of state governments and restrict the authority of the national government."],
+                correct: 1
+            },
+            {
+                question: "The ________ clause of the First Amendment protects an individual's right to believe and practice whatever religion he or she chooses.",
+                options: ["religious freedom restoration", "free exercise", "establishment", "free association"],
+                correct: 1
+            },
+            {
+                question: "Suppose that Congress passed a law to create a national church. Which part of the Constitution would this most likely violate?",
+                options: ["the free exercise clause", "the equal protection clause", "the full faith and credit clause", "the establishment clause"],
+                correct: 3
+            },
+            {
+                question: "In 2019 a public school in Alabama had to stop its traditional pre-game prayers. Which of the following best explains why they stopped?",
+                options: ["The practice was inconsistent with the Court's ruling in Trinity Lutheran Church v. Comer.", "The practice is a violation of the establishment clause of the First Amendment.", "The practice is a violation of the due process clause of the Fourteenth Amendment.", "The practice was inconsistent with the established churches in Alabama."],
+                correct: 1
+            },
+            {
+                question: "Which of the following statements regarding the free exercise clause is true?",
+                options: ["The Lemon test has rendered the free exercise clause null and void.", "The free exercise clause protects believers of all religions as well as non-believers.", "The principle of free exercise has been restricted in more recent years with legislation enabling religious discrimination by public and private entities in prisons, schools, and health care.", "Free exercise of religion is one of the few areas in the Bill of Rights that does not have any limits."],
+                correct: 1
+            },
+            {
+                question: "Which of the following statements about freedom of speech and of the press is true?",
+                options: ["Freedom of speech and of the press is fundamental for democracy as the free exchange of ideas and dissemination of information is crucial for citizens to exercise popular control of government.", "The Supreme Court has always taken a very narrow view of freedom of speech, not extending this right to symbolic speech or to protests.", "Commercial speech, including advertising in newspapers or television, is the most protected form of speech.", "Freedom of speech and of the press has not faced restrictions in the United States because it was of great concern for the framers of the Constitution."],
+                correct: 0
+            },
+            {
+                question: "The rights to assembly and petition are guaranteed by the same amendment that guarantees",
+                options: ["the right to bear arms.", "due process.", "privacy.", "free speech."],
+                correct: 3
+            },
+            {
+                question: "Given that hate speech is constitutionally protected, why was Facebook able to change its terms of service to prevent users from posting hateful commentary and claims?",
+                options: ["Because commentary and claims made in social media platforms cannot constitute \"hate speech\" under the Constitution.", "Because the Trump administration declared Facebook's actions were not in violation of free speech.", "Because Facebook was not exclusively targeting right-wing or left-wing groups.", "Because it is a private company, though Facebook's actions may one day be challenged in court."],
+                correct: 3
+            },
+            {
+                question: "According to the Supreme Court, which of the following is true about high school students in public schools?",
+                options: ["The justices have always provided a broad protection of free speech rights for high school students.", "High school students have no free speech rights whatsoever.", "High school students have the same free speech rights as adults.", "High school students' speech has only limited protection."],
+                correct: 3
+            },
+            {
+                question: "Provided it does not incite violence, which type of speech receives the highest level of protection by the First Amendment?",
+                options: ["commercial speech", "political speech", "libelous speech", "slanderous speech"],
+                correct: 1
+            },
+            {
+                question: "Burning the American flag in protest is not unconstitutional because",
+                options: ["according to the Eighth Amendment, any punishment for such an act during a protest would be considered excessive.", "Congress passed a constitutional amendment that specifically protects this act.", "Senators are no longer considering a ban on flag burning.", "the Supreme Court ruled it is a form of symbolic speech protected by the First Amendment."],
+                correct: 3
+            },
+            {
+                question: "What are civil rights?",
+                options: ["government programs that promote public history installations that memorialize civic strife", "provisions drafted by bureaucratic agencies relating to federal budgeting", "areas of personal freedom constitutionally protected from government interference", "guarantees of equal opportunity and protection through obligations imposed on government to protect individuals"],
+                correct: 3
+            },
+            {
+                question: "Which of the following statements best characterizes the differences in how civil rights and civil liberties were achieved?",
+                options: ["Civil liberties are basic personal freedoms established in the Bill of Rights, whereas civil rights evolved over time as groups organized and campaigned for new rights.", "Civil liberties came about very slowly with more liberties included over the course of hundreds of years; in contrast, the establishment of civil rights was rapid, occurring in a very short time frame.", "Civil liberties were established only through legislative action, whereas civil rights were established through actions taken by the president.", "Civil liberties were established through a series of amendments after the Civil War, whereas civil rights were established in the Bill of Rights shortly after the Founding."],
+                correct: 0
+            },
+            {
+                question: "Which of the following constitutes a civil right?",
+                options: ["voting rights for Black Americans", "the right to burn the American flag", "freedom of speech", "the Miranda rules"],
+                correct: 0
+            },
+            {
+                question: "What are social movements?",
+                options: ["sustained campaigns that support political or social goals of disadvantaged populations", "business groups that focus only on fundraising for political candidates", "scholars who issue reports on the processes of various House and Senate Committees", "government agencies designed to uphold public obligations to protect individuals"],
+                correct: 0
+            },
+            {
+                question: "What is the process by which people organize and act based on a shared goal?",
+                options: ["collective action", "discrimination", "affirmative action", "quid pro quo"],
+                correct: 0
+            },
+            {
+                question: "Which of the following statements about the role of public opinion in the civil rights movement is true?",
+                options: ["Spreading information in hopes of shifting public opinion is significantly more challenging for social movements compared to accessing official institutions.", "Most successful social movements generated widespread support from the public to convince political institutions to act.", "Research shows that the rise of social movements comes after shifts in public opinion, not before. Therefore, social movements do not influence public opinion.", "Public opinion has had little effect on the expansion of civil rights."],
+                correct: 1
+            },
+            {
+                question: "Which clause found in the Constitution is the basis of civil rights for Black Americans, women, and other marginalized groups?",
+                options: ["the commerce clause", "the full faith and credit clause", "the equal protection clause", "the necessary and proper clause"],
+                correct: 2
+            },
+            {
+                question: "What does the burden of proof mean?",
+                options: ["the responsibility of an individual, organization, or government to provide sufficient evidence in support of a claim in court", "the information provided to a grand jury to determine whether criminal charges should be brought", "the materials that law enforcement must acquire to secure a search warrant", "the evidence presented by individuals charged with a crime to prove their innocence"],
+                correct: 0
+            },
+            {
+                question: "What are the three levels of scrutiny under the equal protection clause?",
+                options: ["burden of proof, intermediate scrutiny, and strict scrutiny", "rational basis, Lemon test, and preponderance", "strict scrutiny, de jure, and de facto", "rational basis, intermediate scrutiny, and strict scrutiny"],
+                correct: 3
+            },
+            {
+                question: "The use of any unreasonable and unjust criterion of exclusion is known as _____.",
+                options: ["civil rights", "discrimination", "strict scrutiny", "affirmative action"],
+                correct: 1
+            },
+            {
+                question: "How did the Dred Scott v. Sanford decision help to precipitate the Civil War?",
+                options: ["It weakened the institution of slavery by granting the rights of citizenship to all Black Americans, either free or enslaved.", "It declared that slavery unconstitutional.", "It established the Thirteenth, Fourteenth, and Fifteenth amendments, which the Confederacy had rejected.", "It reinforced the institution of slavery and denied the rights of citizenship to all Black Americans, either free or enslaved."],
+                correct: 3
+            },
+            {
+                question: "Which of the following statements regarding Jim Crow laws is true?",
+                options: ["Jim Crow laws were enacted after the Civil War to give African Americans a vote.", "Jim Crow laws were established after the landmark case, Brown v. Board of Education, to work towards integrating schools.", "Jim Crow laws were approved by the Supreme Court.", "Jim Crow laws were enacted in every state after the Civil War."],
+                correct: 2
+            },
+            {
+                question: "What were Jim Crow laws?",
+                options: ["laws guaranteeing civil rights of free Black Americans before the Civil War", "laws guaranteeing civil rights of Black veterans after the Civil War", "laws enacted by northern states following Reconstruction that prohibited discrimination against Black Americans", "laws enacted by southern states following Reconstruction that discriminated against Black Americans"],
+                correct: 3
+            },
+            {
+                question: "The Fifteenth Amendment to the Constitution guarantees",
+                options: ["due process of law to all citizens of the United States.", "African American men the right to vote.", "no person may be held in involuntary servitude, that is to say, slavery.", "equal pay for all races."],
+                correct: 1
+            },
+            {
+                question: "What did the Thirteenth Amendment do?",
+                options: ["It granted women the right to vote.", "It guaranteed equal protection of the laws.", "It guaranteed voting rights for African American men.", "It abolished slavery."],
+                correct: 3
+            },
+            {
+                question: "What did the Fourteenth Amendment do?",
+                options: ["It guaranteed voting rights for African American men.", "It expanded voting rights to women.", "It abolished slavery.", "It guaranteed equal protection and due process."],
+                correct: 3
+            },
+            {
+                question: "The ruling in Plessy v. Ferguson (1896)",
+                options: ["ruled that the equal protection clause applied only to the federal government and not to state governments.", "established the \"separate but equal\" rule.", "upheld the Civil Rights Act of 1875.", "declared that segregation by race was unconstitutional."],
+                correct: 1
+            },
+            {
+                question: "Legally enforced segregation in public schools is a form of ________ discrimination.",
+                options: ["stare decisis", "de jure", "suspect", "de facto"],
+                correct: 1
+            },
+            {
+                question: "When racial segregation in schools is the result of hundreds of thousands of housing choices made by individuals and families rather than the result of law, it is referred to as",
+                options: ["libertarian.", "de facto.", "organic.", "de jure."],
+                correct: 1
+            },
+            {
+                question: "The Montgomery bus boycott began after ________ refused to give up her seat for a White man.",
+                options: ["Lucretia Mott", "Rosa Parks", "Elizabeth Cady Stanton", "Orbal Faubus"],
+                correct: 1
+            },
+            {
+                question: "What did the U.S. Supreme Court rule in Brown v. Board of Education (1954)?",
+                options: ["The Supreme Court ruled that segregation was not a violation of the Fourteenth Amendment equal protection clause since the defendants convincingly showed the Black and White facilities were truly equal.", "The Supreme Court struck down segregation of most public facilities but upheld segregation of public schools.", "The Supreme Court upheld the \"separate but equal\" rule arguing that states had a compelling interest, and the regulation of public schools was within the power of the states, not the federal government.", "The Supreme Court ruled that segregation in public schools violated the equal protection clause of the Fourteenth Amendment and thus was unconstitutional."],
+                correct: 3
+            },
+            {
+                question: "What did the Civil Rights Act of 1964 do?",
+                options: ["It ended segregation in public spaces and prohibited discrimination on the basis of race, gender, religion, sex, and national origin.", "It prohibited the Justice Department from implementing federal court orders to desegregate schools unless at least three individual parents filed formal complaints.", "It created an independent circuit of federal courts devoted entirely to school desegregation litigation.", "It eliminated the Department of Justice and replaced it with the Department of Civil Rights."],
+                correct: 0
+            },
+            {
+                question: "A ________ is a system of government in which member states retain almost all of their sovereign authority and delegate limited powers to a weak central body.",
+                options: ["unitary state", "confederation", "bicameral state", "republic"],
+                correct: 1
+            },
+            {
+                question: "The document that established the first national-level government in the United States was known as the",
+                options: ["Declaration of Independence.", "Federalist Papers.", "Articles of Confederation.", "U.S. Constitution."],
+                correct: 2
+            },
+            {
+                question: "The Declaration of Independence was written in ________, whereas the Articles of Confederation were not ratified by all the states until ________.",
+                options: ["1776; 1777", "1763; 1776", "1763; 1791", "1776; 1781"],
+                correct: 3
+            },
+            {
+                question: "Which of the following statements characterizes ideals set out by the Declaration of Independence?",
+                options: ["All people are created equal and therefore slavery would be abolished.", "The Articles of Confederation will protect the people.", "People have certain rights that government cannot take away.", "A constitutional monarchy is the only legitimate form of government."],
+                correct: 2
+            },
+            {
+                question: "What was the agreement reached at the Constitutional Convention of 1787 that stipulated that for apportionment of congressional seats, only a portion of enslaved people would be counted?",
+                options: ["the Confederation Compromise", "the Three-Fifths Compromise", "the New Jersey Plan", "the Great Compromise"],
+                correct: 1
+            },
+            {
+                question: "_____ is the mechanism through which each branch of government is able to participate in and influence the activities of the other branches.",
+                options: ["Limited government", "Bicameral", "Checks and balances", "Separation of powers"],
+                correct: 2
+            },
+            {
+                question: "Under the Constitution, state governments are",
+                options: ["prohibited from coining money but are allowed to enter into treaties with other nations.", "allowed to coin money and enter into treaties with other nations.", "prohibited from coining money or entering into treaties with other nations.", "prohibited from entering into treaties with other nations but allowed to coin money."],
+                correct: 2
+            },
+            {
+                question: "The _____ is the concluding paragraph of Article I Section VIII of the Constitution — also known as the necessary and proper clause — which provides Congress with the authority to make all laws necessary and proper to carry out its enumerated power.",
+                options: ["elastic clause", "due process clause", "fair protection clause", "supremacy clause"],
+                correct: 0
+            },
+            {
+                question: "The ________ clause in the U.S. Constitution affirms that national laws and treaties are \"the supreme Law of the Land.\"",
+                options: ["establishment", "necessary and proper", "supremacy", "full faith and credit"],
+                correct: 2
+            },
+            {
+                question: "Federalism is best defined as a system of government",
+                options: ["in which authority is divided into separate branches and each individual branch is given some power over the other branches.", "in which the national government is funded through direct taxation of local governments.", "in which power is divided between a national government and lower-level governments.", "in which lower levels of government have little power independent of the national government."],
+                correct: 2
+            },
+            {
+                question: "The specific powers granted to Congress in Article I, Section 8, of the U.S. Constitution are called the ________ powers.",
+                options: ["implied", "sovereign", "expressed", "executive"],
+                correct: 2
+            },
+            {
+                question: "What is it called when a state grants a city the ability to govern its own local affairs?",
+                options: ["dual federalism", "separation of powers", "city governance", "home rule"],
+                correct: 3
+            },
+            {
+                question: "Which amendment most recognizes that states have a strong role in the American federal republic?",
+                options: ["Seventh", "Tenth", "First", "Fourteenth"],
+                correct: 1
+            },
+            {
+                question: "The inclusion of the Tenth Amendment to the Constitution was most strongly supported by the",
+                options: ["Antifederalists.", "Progressives.", "Federalists.", "Whigs."],
+                correct: 0
+            },
+            {
+                question: "________ powers exist when both the state and national governments share authority in certain domains.",
+                options: ["Reserved", "Expressed", "Implied", "Concurrent"],
+                correct: 3
+            },
+            {
+                question: "A state government's authority to regulate the safety, health, and morals of its citizens is called a(n) ________ power.",
+                options: ["concurrent", "implied", "reserved", "police"],
+                correct: 3
+            },
+            {
+                question: "The full faith and credit clause of the Constitution requires the",
+                options: ["states, but not the federal government, to run a balanced budget.", "states to honor each other's public acts and legal decisions.", "federal government, but not the states, to run a balanced budget.", "federal government to accept a state's outstanding debt at the time of ratification."],
+                correct: 1
+            },
+            {
+                question: "The best example of a concurrent power under the U.S. Constitution is the power to",
+                options: ["coin money.", "regulate commercial activity.", "tax imports and exports.", "declare war."],
+                correct: 1
+            },
+            {
+                question: "The term \"public opinion\" is used to describe",
+                options: ["beliefs and attitudes toward different issues, events, and people.", "the U.S. Supreme Court's decisions.", "the president's collected speeches and writings during his or her term in office.", "the analysis of events broadcast by reporters during the evening news."],
+                correct: 0
+            },
+            {
+                question: "A political ideology is best defined as",
+                options: ["a cohesive set of beliefs that form a general philosophy about the government.", "the various attitudes that citizens possess toward political issues, events, and people.", "the concrete interests that people try to defend through public policy.", "the specific preferences individuals contemplate while discussing an issue."],
+                correct: 0
+            },
+            {
+                question: "In general, which of the following individuals would you expect to be most concerned about excessive government intervention in social life?",
+                options: ["a libertarian", "a conservative", "a social democrat", "a liberal"],
+                correct: 0
+            },
+            {
+                question: "________ generally support abortion rights and oppose state involvement with religious institutions.",
+                options: ["Internationalists", "Socialists", "Liberals", "Conservatives"],
+                correct: 2
+            },
+            {
+                question: "How do political attitudes differ from political ideology?",
+                options: ["People's political attitudes are generally fixed, while their political ideologies tend to change frequently.", "Political attitudes are informed by a person's values, but political ideology is not.", "Political attitudes are specific views about particular issues, while ideology is a broader framework about the role of government in society.", "Political attitudes concern social issues, while political ideology concerns economic issues."],
+                correct: 2
+            },
+            {
+                question: "________ is the most important core value of liberalism.",
+                options: ["Equality", "Justice", "Democracy", "Liberty"],
+                correct: 0
+            },
+            {
+                question: "________ is the core political value most highly prioritized by American conservatives.",
+                options: ["Liberty", "Democracy", "Justice", "Equality"],
+                correct: 0
+            },
+            {
+                question: "Opposition to legalized abortion is a position most likely supported by ________, while support for legalized abortion is a position most likely supported by ________.",
+                options: ["libertarians; conservatives", "liberals; conservatives", "independents; conservatives", "conservatives; liberals"],
+                correct: 3
+            },
+            {
+                question: "A liberal would most likely support",
+                options: ["a reduction in foreign aid for poor countries.", "an expansion in governmental social services.", "an increase in the federal military budget.", "prayer in public schools."],
+                correct: 1
+            },
+            {
+                question: "Conservatives are more likely than liberals to support",
+                options: ["the expansion of government programs, such as Medicaid.", "the right to an abortion.", "government regulation of business.", "school prayer."],
+                correct: 3
+            },
+            {
+                question: "Which of the following is a so-called traditional form of political activity?",
+                options: ["visiting a candidate's website", "volunteering for a campaign", "changing your profile picture", "tweeting"],
+                correct: 1
+            },
+            {
+                question: "In the early years of the United States, which of the following individuals would mostly likely have been eligible to vote?",
+                options: ["a 25-year-old Native American male", "an 18-year-old recent immigrant", "a 30-year-old landowning White male", "a 40-year-old woman"],
+                correct: 2
+            },
+            {
+                question: "Which constitutional amendment prohibited states from denying the right to vote on the basis of race?",
+                options: ["Thirteenth", "Fifteenth", "Sixteenth", "Fourteenth"],
+                correct: 1
+            },
+            {
+                question: "The Jim Crow era refers to the period",
+                options: ["between the ratification of the Constitution and the start of the Civil War.", "after Reconstruction and before the passage of the 1965 Voting Rights Act.", "between the Supreme Court's decision in the Dred Scott case and the start of the Civil War.", "immediately following the Civil War in which the federal government set the conditions that would allow the rebellious southern states back into the Union."],
+                correct: 1
+            },
+            {
+                question: "Women won the right to vote across the United States in",
+                options: ["1965.", "1920.", "1790.", "1865."],
+                correct: 1
+            },
+            {
+                question: "What did the most recent expansion of voting rights at the federal level do?",
+                options: ["It created a national early voting period.", "It lowered the voting age to 18.", "It expanded voting rights to noncitizens.", "It granted voting rights to convicted criminals still in jail."],
+                correct: 1
+            },
+            {
+                question: "What is turnout?",
+                options: ["activities designed to influence government", "the right to vote", "assemblies or crowds out in public to confront a government or other official organization", "the percentage of eligible individuals who actually vote"],
+                correct: 3
+            },
+            {
+                question: "Compared to other developed countries, voter turnout in the United States is",
+                options: ["higher", "about the same", "impossible to compare", "lower"],
+                correct: 3
+            },
+            {
+                question: "Voter turnout in state and local elections is generally ________ turnout in national elections.",
+                options: ["much higher than", "slightly higher than", "much lower than", "about the same as"],
+                correct: 2
+            },
+            {
+                question: "Which of the following would be considered a form of digital political participation?",
+                options: ["reading election updates in a newspaper", "placing a candidate's sticker on your door", "watching political candidates give speeches on YouTube", "placing campaign flyers in neighborhood mailboxes"],
+                correct: 2
+            },
+            {
+                question: "State legislative districts",
+                options: ["are drawn to include a minimum of 100,000 people in all states.", "are constitutionally required to include no more than 500,000 people.", "are constitutionally required to include no more than 1 million people.", "vary from a few thousand people in some states to nearly a million in California."],
+                correct: 3
+            },
+            {
+                question: "What is a majority-minority district?",
+                options: ["an electoral district in which the party typically out of power in a state actually has majority support", "an electoral district in which the majority of the constituents belong to racial or ethnic minorities", "an electoral district that carefully balances the partisan split between the party that typically wins a majority in that state with the party that is typically in the minority", "a type of electoral district created by the Supreme Court that exclusively uses race and ethnicity to determine its boundaries"],
+                correct: 1
+            },
+            {
+                question: "Which of the following best describes a referendum?",
+                options: ["congressional election held between presidential elections.", "power to remove an elected official from office during the middle of his or her term.", "practice of referring a proposed law passed by a legislature to the vote of the electorate for approval or rejection.", "process by which a party selects its candidates for the general election."],
+                correct: 2
+            },
+            {
+                question: "What did the Supreme Court mean by \"one person, one vote\"?",
+                options: ["Voters may only vote once in an election.", "Within a state, electoral districts must have roughly equal populations.", "No one could be denied suffrage on the basis of race or gender.", "Voting was an individual right, not a group right."],
+                correct: 1
+            },
+            {
+                question: "A system in which voters opt-out of, rather than opt-in to registering to vote is known as",
+                options: ["mandatory voter registration.", "compulsory voter registration.", "automatic voter registration.", "bi-system registration."],
+                correct: 2
+            },
+            {
+                question: "On what day are general elections for federal offices held in the United States?",
+                options: ["the last Tuesday in October", "the first Tuesday in November", "the first Tuesday after the first Monday in November", "the Tuesday nine days before Thanksgiving"],
+                correct: 2
+            },
+            {
+                question: "What is a grassroots campaign?",
+                options: ["a media-driven campaign that is costly, but highly effective", "campaign spending that gives the appearance that a candidate has a lot of support", "social media advertisements by the campaign that target specific groups of voters", "a political campaign that operates on the local level and often uses face-to-face communication"],
+                correct: 3
+            },
+            {
+                question: "In order for a political party to select a candidate to run in the general election, it holds a(n)",
+                options: ["primary election.", "referendum.", "midterm election.", "exploratory committee."],
+                correct: 0
+            },
+            {
+                question: "In a __________ election, voters choose the nominees for their parties. In a __________ election, voters choose who they want to be officeholders.",
+                options: ["midterm; final", "general; primary", "primary; general", "runoff; midterm"],
+                correct: 2
+            },
+            {
+                question: "A majority system requires that a candidate must win __________ to win an election.",
+                options: ["at least 33 percent of all votes cast", "at least 40 percent of all votes cast", "50 percent plus one of all votes cast", "at least 60 percent of all votes cast, plus a percentage of absentee ballots"],
+                correct: 2
+            }
+        ];
+
+        let questions = [];
+        let currentQuestionIndex = 0;
+        let selectedAnswer = null;
+        let correctCount = 0;
+        let incorrectCount = 0;
+
+        function shuffleArray(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function initQuiz() {
+            questions = shuffleArray(allQuestions);
+            currentQuestionIndex = 0;
+            selectedAnswer = null;
+            correctCount = 0;
+            incorrectCount = 0;
+            updateScoreDisplay();
+            displayQuestion();
+        }
+
+        function displayQuestion() {
+            const container = document.getElementById('questionContainer');
+            const q = questions[currentQuestionIndex];
+            
+            let html = `<h3>Question ${currentQuestionIndex + 1} of ${questions.length}</h3><p>${q.question}</p>`;
+            q.options.forEach((option, index) => {
+                html += `<div class="option" onclick="selectOption(${index})" id="opt-${index}">${option}</div>`;
+            });
+            
+            container.innerHTML = html;
+            document.getElementById('progress').textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+            document.getElementById('feedback').className = 'feedback';
+            document.getElementById('feedback').style.display = 'none';
+            document.getElementById('submitBtn').classList.add('show');
+            document.getElementById('nextBtn').classList.remove('show');
+            selectedAnswer = null;
+        }
+
+        function selectOption(index) {
+            if (selectedAnswer !== null) return;
+            
+            const allOptions = document.querySelectorAll('.option');
+            allOptions.forEach(opt => opt.classList.remove('selected'));
+            
+            document.getElementById(`opt-${index}`).classList.add('selected');
+            selectedAnswer = index;
+        }
+
+        function submitAnswer() {
+            if (selectedAnswer === null) {
+                alert('Please select an answer!');
+                return;
+            }
+            
+            const q = questions[currentQuestionIndex];
+            const allOptions = document.querySelectorAll('.option');
+            const feedback = document.getElementById('feedback');
+            
+            allOptions.forEach((opt, index) => {
+                opt.classList.add('disabled');
+                opt.style.pointerEvents = 'none';
+                if (index === q.correct) {
+                    opt.classList.add('correct');
+                }
+            });
+            
+            if (selectedAnswer === q.correct) {
+                document.getElementById(`opt-${selectedAnswer}`).classList.add('correct');
+                feedback.className = 'feedback correct';
+                feedback.textContent = '✓ Correct!';
+                correctCount++;
+            } else {
+                document.getElementById(`opt-${selectedAnswer}`).classList.add('incorrect');
+                feedback.className = 'feedback incorrect';
+                feedback.textContent = '✗ Incorrect';
+                incorrectCount++;
+            }
+            
+            updateScoreDisplay();
+            document.getElementById('submitBtn').classList.remove('show');
+            
+            if (currentQuestionIndex < questions.length - 1) {
+                document.getElementById('nextBtn').classList.add('show');
+            } else {
+                setTimeout(showResults, 1500);
+            }
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            displayQuestion();
+        }
+
+        function updateScoreDisplay() {
+            document.getElementById('correctCount').textContent = correctCount;
+            document.getElementById('incorrectCount').textContent = incorrectCount;
+        }
+
+        function showResults() {
+            document.getElementById('quizContent').style.display = 'none';
+            document.getElementById('scoreDisplay').style.display = 'none';
+            document.getElementById('progress').style.display = 'none';
+            
+            const percentage = ((correctCount / questions.length) * 100).toFixed(1);
+            document.getElementById('finalScore').textContent = `${correctCount} / ${questions.length}`;
+            document.getElementById('resultText').textContent = `You scored ${percentage}% (${correctCount} correct, ${incorrectCount} incorrect)`;
+            document.getElementById('results').classList.add('show');
+        }
+
+        function restartQuiz() {
+            document.getElementById('quizContent').style.display = 'block';
+            document.getElementById('scoreDisplay').style.display = 'block';
+            document.getElementById('progress').style.display = 'block';
+            document.getElementById('results').classList.remove('show');
+            initQuiz();
+        }
+
+        initQuiz();
+    </script>
+</body>
+</html>
