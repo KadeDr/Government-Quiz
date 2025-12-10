@@ -165,7 +165,7 @@
 </head>
 <body>
     <div class="quiz-container">
-        <h1>Government Final Exam Study Quiz</h1>
+        <h1>Political Science Quiz</h1>
         <div class="progress" id="progress">Question 1 of 50</div>
         <div class="score-display" id="scoreDisplay">
             <span class="correct-count">Correct: <span id="correctCount">0</span></span> | 
@@ -850,7 +850,8 @@
         }
 
         function selectOption(index) {
-            if (selectedAnswer !== null) return;
+            const submitBtn = document.getElementById('submitBtn');
+            if (!submitBtn.classList.contains('show')) return;
             
             const allOptions = document.querySelectorAll('.option');
             allOptions.forEach(opt => opt.classList.remove('selected'));
